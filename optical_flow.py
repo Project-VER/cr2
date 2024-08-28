@@ -5,6 +5,8 @@ Created on Wed Aug 28 18:42:56 2024
 
 @author: abigailhiggins
 """
+#https://detectron2.readthedocs.io/en/v0.4.1/tutorials/models.html
+
 import cv2
 from detectron2.utils.logger import setup_logger
 setup_logger()
