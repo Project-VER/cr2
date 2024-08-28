@@ -33,14 +33,14 @@ def trigger_action_f():
 def on_press(key):
     global r_tap_count, f_tap_count, mode_timer_r, mode_timer_f
     try:
-        if key.char == 'r':
+        if key.char == 'r': #change for rpi
             r_tap_count += 1  # Increment tap count
             # Restart the timer every time 'r' is pressed
             if mode_timer_r is not None:
                 mode_timer_r.cancel()
             mode_timer_r = Timer(mode_timeout, trigger_action_r)
             mode_timer_r.start()
-        elif key.char == 'f':
+        elif key.char == 'f': #change for rpi
             f_tap_count += 1
             if mode_timer_f is not None:
                 mode_timer_f.cancel()
