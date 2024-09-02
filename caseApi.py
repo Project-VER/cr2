@@ -2,21 +2,10 @@ import gpiod
 import time
 import threading
 
-
-chip = gpiod.Chip('gpiochip4')
-
-button_desc = chip.get_line(2)
-button_read = chip.get_line(3)
-
-button_desc.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
-button_read.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
-
-
-
 # GPIO chip and line numbers
-CHIP = "gpiochip4"
-BUTTON_2_LINE = 2
-BUTTON_3_LINE = 3
+CHIP = 'gpiochip4'
+BUTTON_DESC_LINE = 2
+BUTTON_READ_LINE = 3
 
 # Timing constants
 DEBOUNCE_TIME = 0.05  # 50ms debounce
@@ -45,7 +34,7 @@ def chat():
     time.sleep(2)  # Simulating some work
     is_function_running = False
 
-def handle_button_2():
+def handle_button_desc():
     global last_press_time, is_function_running
     
     with button_press_lock:
@@ -65,14 +54,14 @@ def handle_button_2():
                 is_function_running = True
                 threading.Thread(target=desc).start()
 
-def handle_button_3():
+def handle_button_read():
     global is_function_running
     
     with button_press_lock:
         if is_function_running:
             return
         
-        print("Button 3 pressed")
+        print("Read button pressed")
         is_function_running = True
         threading.Thread(target=read).start()
 
@@ -80,24 +69,27 @@ def main():
     chip = gpiod.Chip(CHIP)
     
     try:
-        button_2 = chip.get_line(BUTTON_2_LINE)
-        button_3 = chip.get_line(BUTTON_3_LINE)
+        button_desc = chip.get_line(BUTTON_DESC_LINE)
+        button_read = chip.get_line(BUTTON_READ_LINE)
         
-        config = gpiod.LineRequest()
-        config.request_type = gpiod.LINE_REQ_EV_FALLING_EDGE
-        config.flags = gpiod.LINE_REQ_DIR_IN
-
-        button_2.request(config)
-        button_3.request(config)
+        button_desc.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
+        button_read.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
+        
+        last_desc_state = 1
+        last_read_state = 1
         
         while True:
-            event_2 = button_2.event_read()
-            if event_2:
-                handle_button_2()
+            desc_state = button_desc.get_value()
+            read_state = button_read.get_value()
             
-            event_3 = button_3.event_read()
-            if event_3:
-                handle_button_3()
+            if desc_state == 0 and last_desc_state == 1:
+                handle_button_desc()
+            
+            if read_state == 0 and last_read_state == 1:
+                handle_button_read()
+            
+            last_desc_state = desc_state
+            last_read_state = read_state
             
             time.sleep(0.01)  # Small delay to reduce CPU usage
             
@@ -106,10 +98,10 @@ def main():
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        if 'button_2' in locals():
-            button_2.release()
-        if 'button_3' in locals():
-            button_3.release()
+        if 'button_desc' in locals():
+            button_desc.release()
+        if 'button_read' in locals():
+            button_read.release()
         chip.close()
 
 if __name__ == "__main__":
