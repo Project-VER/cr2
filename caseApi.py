@@ -59,7 +59,7 @@ def handle_button_read():
         threading.Thread(target=read).start()
 
 def main():
-    global pending_click, last_press_time
+    global pending_click, last_press_time, is_function_running
     chip = gpiod.Chip(CHIP)
     
     try:
