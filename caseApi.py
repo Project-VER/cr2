@@ -73,6 +73,7 @@ def main():
         last_read_state = 1
         
         while True:
+            current_time = time.time()
             desc_state = button_desc.get_value()
             read_state = button_read.get_value()
             
@@ -82,8 +83,8 @@ def main():
             if read_state == 0 and last_read_state == 1:
                 handle_button_read()
             
-            # Check for pending single click
-            if pending_click and time.time() - last_press_time >= DOUBLE_CLICK_TIME:
+            # Check for pending single click timeout
+            if pending_click and current_time - last_press_time >= DOUBLE_CLICK_TIME:
                 pending_click = False
                 if not is_function_running:
                     print("Single click confirmed")
