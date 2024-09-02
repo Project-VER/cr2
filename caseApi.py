@@ -2,6 +2,17 @@ import gpiod
 import time
 import threading
 
+
+chip = gpiod.Chip('gpiochip4')
+
+button_desc = chip.get_line(2)
+button_read = chip.get_line(3)
+
+button_desc.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
+button_read.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
+
+
+
 # GPIO chip and line numbers
 CHIP = "gpiochip4"
 BUTTON_2_LINE = 2
