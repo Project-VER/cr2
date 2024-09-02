@@ -15,6 +15,7 @@ DOUBLE_CLICK_TIME = 0.3  # 300ms for double-click detection
 last_press_time = 0
 is_function_running = False
 button_press_lock = threading.Lock()
+pending_click = False
 
 def read():
     global is_function_running
@@ -35,37 +36,30 @@ def chat():
     is_function_running = False
 
 def handle_button_desc():
-    global last_press_time, is_function_running
+    global last_press_time, is_function_running, pending_click
     
-    with button_press_lock:
-        if is_function_running:
-            return
-        
-        current_time = time.time()
-        if current_time - last_press_time < DOUBLE_CLICK_TIME:
-            print("Double click detected")
+    current_time = time.time()
+    if current_time - last_press_time < DOUBLE_CLICK_TIME:
+        print("Double click detected")
+        pending_click = False
+        if not is_function_running:
             is_function_running = True
             threading.Thread(target=chat).start()
-        else:
-            last_press_time = current_time
-            time.sleep(DOUBLE_CLICK_TIME)
-            if time.time() - last_press_time >= DOUBLE_CLICK_TIME:
-                print("Single click detected")
-                is_function_running = True
-                threading.Thread(target=desc).start()
+    else:
+        print("First click detected, waiting for potential second click")
+        pending_click = True
+        last_press_time = current_time
 
 def handle_button_read():
     global is_function_running
     
-    with button_press_lock:
-        if is_function_running:
-            return
-        
+    if not is_function_running:
         print("Read button pressed")
         is_function_running = True
         threading.Thread(target=read).start()
 
 def main():
+    global pending_click, last_press_time
     chip = gpiod.Chip(CHIP)
     
     try:
@@ -87,6 +81,14 @@ def main():
             
             if read_state == 0 and last_read_state == 1:
                 handle_button_read()
+            
+            # Check for pending single click
+            if pending_click and time.time() - last_press_time >= DOUBLE_CLICK_TIME:
+                pending_click = False
+                if not is_function_running:
+                    print("Single click confirmed")
+                    is_function_running = True
+                    threading.Thread(target=desc).start()
             
             last_desc_state = desc_state
             last_read_state = read_state
