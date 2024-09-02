@@ -72,19 +72,23 @@ def main():
         button_2 = chip.get_line(BUTTON_2_LINE)
         button_3 = chip.get_line(BUTTON_3_LINE)
         
-        button_2.request(consumer="button-2", type=gpiod.LINE_REQ_EV_FALLING_EDGE)
-        button_3.request(consumer="button-3", type=gpiod.LINE_REQ_EV_FALLING_EDGE)
+        config = gpiod.LineRequest()
+        config.request_type = gpiod.LINE_REQ_EV_FALLING_EDGE
+        config.flags = gpiod.LINE_REQ_DIR_IN
+
+        button_2.request(config)
+        button_3.request(config)
         
         while True:
-            event_2 = button_2.event_wait(sec=1)
+            event_2 = button_2.event_read()
             if event_2:
-                if event_2.type == gpiod.LineEvent.FALLING_EDGE:
-                    handle_button_2()
+                handle_button_2()
             
-            event_3 = button_3.event_wait(sec=1)
+            event_3 = button_3.event_read()
             if event_3:
-                if event_3.type == gpiod.LineEvent.FALLING_EDGE:
-                    handle_button_3()
+                handle_button_3()
+            
+            time.sleep(0.01)  # Small delay to reduce CPU usage
             
     except KeyboardInterrupt:
         print("Exiting...")
