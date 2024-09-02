@@ -77,3 +77,9 @@ def main():
 
             if button_desc_chat.get_value() == 1:
                 handle_button_desc_chat()
+        time.sleep(0.1)  # Polling interval
+    except KeyboardInterrupt:
+        print("Exiting...")
+
+if __name__ == "__main__":
+    main()
