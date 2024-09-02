@@ -3,7 +3,7 @@ import time
 import threading
 
 # GPIO chip and line numbers
-CHIP = "gpiochip0"
+CHIP = "gpiochip4"
 BUTTON_2_LINE = 2
 BUTTON_3_LINE = 3
 
@@ -34,7 +34,7 @@ def chat():
     time.sleep(2)  # Simulating some work
     is_function_running = False
 
-def handle_button_2(event):
+def handle_button_2():
     global last_press_time, is_function_running
     
     with button_press_lock:
@@ -42,30 +42,28 @@ def handle_button_2(event):
             return
         
         current_time = time.time()
-        if event.type == gpiod.LineEvent.FALLING_EDGE:
-            if current_time - last_press_time < DOUBLE_CLICK_TIME:
-                print("Double click detected")
+        if current_time - last_press_time < DOUBLE_CLICK_TIME:
+            print("Double click detected")
+            is_function_running = True
+            threading.Thread(target=chat).start()
+        else:
+            last_press_time = current_time
+            time.sleep(DOUBLE_CLICK_TIME)
+            if time.time() - last_press_time >= DOUBLE_CLICK_TIME:
+                print("Single click detected")
                 is_function_running = True
-                threading.Thread(target=chat).start()
-            else:
-                last_press_time = current_time
-                time.sleep(DOUBLE_CLICK_TIME)
-                if time.time() - last_press_time >= DOUBLE_CLICK_TIME:
-                    print("Single click detected")
-                    is_function_running = True
-                    threading.Thread(target=desc).start()
+                threading.Thread(target=desc).start()
 
-def handle_button_3(event):
+def handle_button_3():
     global is_function_running
     
     with button_press_lock:
         if is_function_running:
             return
         
-        if event.type == gpiod.LineEvent.FALLING_EDGE:
-            print("Button 3 pressed")
-            is_function_running = True
-            threading.Thread(target=read).start()
+        print("Button 3 pressed")
+        is_function_running = True
+        threading.Thread(target=read).start()
 
 def main():
     chip = gpiod.Chip(CHIP)
@@ -80,11 +78,13 @@ def main():
         while True:
             event_2 = button_2.event_wait(sec=1)
             if event_2:
-                handle_button_2(event_2)
+                if event_2.type == gpiod.LineEvent.FALLING_EDGE:
+                    handle_button_2()
             
             event_3 = button_3.event_wait(sec=1)
             if event_3:
-                handle_button_3(event_3)
+                if event_3.type == gpiod.LineEvent.FALLING_EDGE:
+                    handle_button_3()
             
     except KeyboardInterrupt:
         print("Exiting...")
