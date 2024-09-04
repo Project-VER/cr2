@@ -1,34 +1,30 @@
+'''
+File: caseApi.py
+Created Date: Monday, September 2nd 2024, 3:43:57 pm
+Author: alex-crouch
+
+Project Ver 2024
+'''
 import gpiod
 import time
 
 chip = gpiod.Chip('gpiochip4')
 button_desc = chip.get_line(2)
+button_read = chip.get_line(3)
+
 button_desc.request(consumer="Line", type=gpiod.LINE_REQ_EV_RISING_EDGE)
+button_read.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
 
-last_press_time = 0
-press_count = 0
-timeout = 2  # seconds
-
+# Press to describe, hold to chat
 while True:
-    if button_desc.event_wait(sec=1):
-        event = button_desc.event_read()
-        if event.type == gpiod.LineEvent.RISING_EDGE:
-            current_time = time.time()
-            if current_time - last_press_time > timeout:
-                press_count = 1
-            else:
-                press_count += 1
-            
-            last_press_time = current_time
-            
-            if press_count == 1:
-                time.sleep(0.5)  # Wait a bit to see if there's a second press
-                if press_count == 1:
-                    print("Desc")
-            elif press_count == 2:
-                print("Chat")
-                press_count = 0
-    
-    # Reset press count if timeout is reached
-    if time.time() - last_press_time > timeout:
-        press_count = 0
+    if button_desc.get_value() == 0:
+        time.sleep(0.4)
+        if button_desc.get_value() == 0:
+            print('Chat')
+            time.sleep(10)
+        else:
+            print('Desc')
+            time.sleep(10)
+    if button_read.get_value() == 0:
+        print('Read')
+        time.sleep(10)
