@@ -1,3 +1,8 @@
+'''
+Gets best image based on edge sharpness 
+'''
+
+
 from picamera2 import Picamera2
 import cv2
 import numpy as np
