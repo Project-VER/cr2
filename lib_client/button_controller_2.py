@@ -41,8 +41,6 @@ class CameraController:
 
         self.frame_buffer = [None] * 10
         self.frame_pointer = 0
-        self.frame_array = []
-
 
     def capture_frame(self):
         frame = self.picam2.capture_array()
@@ -50,15 +48,6 @@ class CameraController:
             self.frame_buffer[self.frame_pointer] = frame
             self.frame_pointer = (self.frame_pointer + 1) % 10
         return frame is not None
-    
-    def focus_capture(self, focus_value):
-        self.picam2.set_controls({"LensFocus": focus_value}) #Set focus value
-        time.sleep(0.5) # Allow time for focus to adjust
-        focus_values = [i/10 for i in range(11)] #0.0 to 1.0 in steps of 0.1
-        for focus in focus_values:
-            self.frame_array = self.capture_frame(focus)
-
-        print("Focus test complete, picking best image now")
 
     def get_best_image(self):
         best_image_index = pick_best_image(self.frame_buffer)
