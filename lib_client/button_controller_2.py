@@ -41,6 +41,7 @@ class CameraController:
 
         self.frame_buffer = [None] * 10
         self.frame_pointer = 0
+        self.frame_array = []
 
 
     def capture_frame(self):
@@ -55,7 +56,7 @@ class CameraController:
         time.sleep(0.5) # Allow time for focus to adjust
         focus_values = [i/10 for i in range(11)] #0.0 to 1.0 in steps of 0.1
         for focus in focus_values:
-            frame_array = capture_frame(focus)
+            self.frame_array = self.capture_frame(focus)
 
         print("Focus test complete, picking best image now")
 
